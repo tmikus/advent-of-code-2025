@@ -1,6 +1,4 @@
-fn extract_lines(input: &str) -> Vec<&str> {
-    input.lines().collect()
-}
+use crate::utils::extract_lines;
 
 fn parse_dial_movement(line: &str) -> i32 {
     let direction = line.trim().chars().next().unwrap();

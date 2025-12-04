@@ -1,4 +1,6 @@
 mod puzzle_1;
+mod puzzle_2;
+mod utils;
 
 fn read_number() -> i32 {
     let mut input = String::new();
@@ -11,8 +13,9 @@ fn read_puzzle_input(path: &str) -> String {
 }
 
 fn main() {
-    let puzzles = vec![
+    let puzzles: Vec<(fn(&str), &str)> = vec![
         (puzzle_1::solve_puzzle, "inputs/puzzle_1.txt"),
+        (puzzle_2::solve_puzzle, "inputs/puzzle_2.txt"),
     ];
     println!("Which puzzle would you like to run? [1-{}]", puzzles.len());
     let puzzle_number = read_number();
