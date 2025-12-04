@@ -51,5 +51,3 @@ pub fn solve_puzzle(input: &str) {
     solve_part_1(&number_pairs);
     solve_part_2(&number_pairs)
 }
-
-
