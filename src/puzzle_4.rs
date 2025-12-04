@@ -27,15 +27,43 @@ fn parse_input(input: &str) -> Vec<Vec<bool>> {
     input.trim().lines().map(|line| line.trim().chars().map(|c| c == '@').collect()).collect()
 }
 
-pub fn solve_puzzle(input: &str) {
-    let map = parse_input(input);
+fn solve_part_1(map: &Vec<Vec<bool>>) {
     let mut result = 0;
     for y in 0..map.len() {
         for x in 0..map[y].len() {
-            if map[y][x] && count_neighbours(&map, x, y) < 4{
+            if map[y][x] && count_neighbours(map, x, y) < 4{
                 result += 1;
             }
         }
     }
     println!("Part 1: {}", result);
+}
+
+fn clear_accessible_spaces(map: &mut Vec<Vec<bool>>) -> usize {
+    let mut result = 0;
+    for y in 0..map.len() {
+        for x in 0..map[y].len() {
+            if map[y][x] && count_neighbours(map, x, y) < 4 {
+                result += 1;
+                map[y][x] = false;
+            }
+        }
+    }
+    result
+}
+
+fn solve_part_2(mut map: Vec<Vec<bool>>) {
+    let mut total_result = 0;
+    loop {
+        let result = clear_accessible_spaces(&mut map);
+        if result == 0 { break; }
+        total_result += result;
+    }
+    println!("Part 2: {}", total_result);
+}
+
+pub fn solve_puzzle(input: &str) {
+    let map = parse_input(input);
+    solve_part_1(&map);
+    solve_part_2(map);
 }
