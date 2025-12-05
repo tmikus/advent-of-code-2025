@@ -30,5 +30,7 @@ fn main() {
     }
     let (solve_puzzle, path) = puzzles[(puzzle_number - 1) as usize];
     let puzzle_input = read_puzzle_input(path);
+    let start_time = std::time::Instant::now();
     solve_puzzle(&puzzle_input);
+    println!("Time elapsed: {:?}", start_time.elapsed());
 }
