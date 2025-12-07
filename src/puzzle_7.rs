@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 #[derive(Debug, PartialEq)]
 enum ManifoldEntry {
@@ -7,13 +7,13 @@ enum ManifoldEntry {
     Splitter,
 }
 
-struct BeamSimulation {
-    manifold: Vec<Vec<ManifoldEntry>>,
+struct BeamSimulation<'t> {
+    manifold: &'t Vec<Vec<ManifoldEntry>>,
     steps: Vec<BeamSimulationStep>,
 }
 
-impl BeamSimulation {
-    fn new(manifold: Vec<Vec<ManifoldEntry>>, (emitter_x, emitter_y): (usize, usize)) -> Self {
+impl<'t> BeamSimulation<'t> {
+    fn new(manifold: &'t Vec<Vec<ManifoldEntry>>, (emitter_x, emitter_y): (usize, usize)) -> Self {
         let first_step = BeamSimulationStep::new(emitter_y, HashSet::from([emitter_x]));
         Self {
             manifold,
@@ -100,10 +100,47 @@ fn parse_manifold(input: &str) -> Vec<Vec<ManifoldEntry>> {
         .collect()
 }
 
+fn simulate_beam(
+    manifold: &Vec<Vec<ManifoldEntry>>,
+    (beam_x, beam_y): (usize, usize),
+    previous_paths: &mut HashMap<(usize, usize), usize>,
+) -> usize {
+    if beam_y >= manifold.len() {
+        return 1;
+    }
+    let row = &manifold[beam_y];
+    if beam_x >= row.len() {
+        return 1;
+    }
+    if previous_paths.contains_key(&(beam_x, beam_y)) {
+        return *previous_paths.get(&(beam_x, beam_y)).unwrap();
+    }
+    let entry = &row[beam_x];
+    let result = match entry {
+        ManifoldEntry::Splitter => {
+            let right = simulate_beam(manifold, (beam_x + 1, beam_y + 1), previous_paths);
+            let left = if beam_x > 0 {
+                simulate_beam(manifold, (beam_x - 1, beam_y + 1), previous_paths)
+            } else {
+                0
+            };
+            left + right
+        }
+        _ => simulate_beam(manifold, (beam_x, beam_y + 1), previous_paths),
+    };
+    previous_paths.insert((beam_x, beam_y), result);
+    result
+}
+
 pub fn solve_puzzle(input: &str) {
     let manifold = parse_manifold(input);
-    let emitter_position = find_emitter_position(&manifold).unwrap();
-    let mut simulation = BeamSimulation::new(manifold, emitter_position);
+    let (emitter_x, emitter_y) = find_emitter_position(&manifold).unwrap();
+    let mut simulation = BeamSimulation::new(&manifold, (emitter_x, emitter_y));
     simulation.simulate_until_end();
-    println!("Split count: {}", simulation.get_split_count());
+    println!("Part 1: {}", simulation.get_split_count());
+
+    let mut previous_paths = HashMap::new();
+    let beam_split_count =
+        simulate_beam(&manifold, (emitter_x, emitter_y + 1), &mut previous_paths);
+    println!("Part 2: {}", beam_split_count);
 }
