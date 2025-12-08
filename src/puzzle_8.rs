@@ -117,16 +117,13 @@ pub fn solve_puzzle(input: &str) {
     let mut connections = Vec::<(u64, &JunctionBox, &JunctionBox)>::new();
     for (i, jb1) in junction_boxes.iter().enumerate() {
         for jb2 in junction_boxes.iter().skip(i + 1) {
-            if jb1 == jb2 {
-                continue;
-            }
             let distance = jb1.distance_to(jb2);
             connections.push((distance, jb1, jb2));
         }
     }
     connections.sort_by(|(dist1, _, _), (dist2, _, _)| dist1.cmp(dist2));
     let mut manager = CircuitManager::new(&junction_boxes);
-    for (_, source, destination) in connections.into_iter().take(junction_boxes.len()) {
+    for (_, source, destination) in connections.iter().take(junction_boxes.len()) {
         manager.connect_junction_boxes(source, destination);
     }
     let mut sorted_circuits = manager
@@ -141,4 +138,13 @@ pub fn solve_puzzle(input: &str) {
         .map(|(size, _)| size as i64)
         .product();
     println!("Part 1: {}", result);
+
+    let mut manager = CircuitManager::new(&junction_boxes);
+    'l: for (_, source, destination) in connections.into_iter() {
+        manager.connect_junction_boxes(source, destination);
+        if manager.circuits.len() == 1 {
+            println!("Part 2: {}", source.x * destination.x);
+            break 'l;
+        }
+    }
 }
