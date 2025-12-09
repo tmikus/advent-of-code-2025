@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 use std::hash::{Hash, Hasher};
 
-#[derive(Debug, Eq, PartialEq)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 struct Point {
     x: usize,
     y: usize,
@@ -57,100 +57,68 @@ fn solve_part_1(points: &Vec<Point>) {
     println!("Part 1: {}", largest_area);
 }
 
-struct Grid<'t> {
-    height: usize,
-    points: Vec<Vec<Option<&'t Point>>>,
-    width: usize,
+#[derive(Hash, Eq, PartialEq)]
+struct Rectangle {
+    x_min: usize,
+    y_min: usize,
+    x_max: usize,
+    y_max: usize,
 }
 
-impl<'t> Grid<'t> {
-    fn new(points: &'t Vec<Point>) -> Grid<'t> {
-        let width = points.iter().map(|p| p.x).max().unwrap() + 1;
-        let height = points.iter().map(|p| p.y).max().unwrap() + 1;
-        let mut grid = Grid {
-            height,
-            points: vec![vec![None; width]; height],
-            width,
-        };
-        for point in points.iter() {
-            grid.points[point.y][point.x] = Some(point);
-        }
-        grid
-    }
-
-    fn find_next_points(&'t self, point: &'t Point) -> Vec<&'t Point> {
-        let mut result = Vec::new();
-        if let Some(p) = self.find_point_on_x_axis(point, -1) {
-            result.push(p);
-        }
-        if let Some(p) = self.find_point_on_x_axis(point, 1) {
-            result.push(p);
-        }
-        if let Some(p) = self.find_point_on_y_axis(point, -1) {
-            result.push(p);
-        }
-        if let Some(p) = self.find_point_on_y_axis(point, 1) {
-            result.push(p);
-        }
-        result
-    }
-
-    fn find_point_on_x_axis(&self, point: &Point, direction: i32) -> Option<&Point> {
-        let mut x = point.x as i32;
-        loop {
-            x += direction;
-            if x < 0 || x >= self.width as i32 {
-                return None;
-            }
-            if let Some(p) = self.points[point.y][x as usize] {
-                return Some(p);
-            }
+impl Rectangle {
+    fn new(from: &Point, to: &Point) -> Rectangle {
+        let x_min = from.x.min(to.x);
+        let x_max = from.x.max(to.x);
+        let y_min = from.y.min(to.y);
+        let y_max = from.y.max(to.y);
+        Rectangle {
+            x_min,
+            y_min,
+            x_max,
+            y_max,
         }
     }
 
-    fn find_point_on_y_axis(&self, point: &Point, direction: i32) -> Option<&Point> {
-        let mut y = point.y as i32;
-        loop {
-            y += direction;
-            if y < 0 || y >= self.height as i32 {
-                return None;
-            }
-            if let Some(p) = self.points[y as usize][point.x] {}
-        }
+    pub fn overlaps(&self, other: &Rectangle) -> bool {
+        let separated = self.x_max <= other.x_min
+            || other.x_max <= self.x_min
+            || self.y_max <= other.y_min
+            || other.y_max <= self.y_min;
+        !separated
     }
 }
 
-struct Edge<'t> {
-    from: &'t Point,
-    to: &'t Point,
-}
-
-fn build_edges<'t>(grid: &'t Grid<'t>, start_point: &'t Point) -> Vec<Edge<'t>> {
-    let mut edges = Vec::new();
-    let mut visited_points = HashSet::<&Point>::new();
-    let mut queue = vec![start_point];
-    while let Some(point) = queue.pop() {
-        visited_points.insert(point);
-        for next_point in grid.find_next_points(point) {
-            if visited_points.contains(&next_point) {
-                continue;
-            }
-            edges.push(Edge {
-                from: point,
-                to: next_point,
-            });
-            queue.push(next_point);
+fn build_edges(points: &'_ Vec<Point>) -> HashSet<Rectangle> {
+    let mut remaining_points = points.iter().collect::<Vec<_>>();
+    let mut edges = HashSet::new();
+    while let Some(from_point) = remaining_points.pop() {
+        if let Some(to_point) = points.iter().find(|p| p.y == from_point.y) {
+            edges.insert(Rectangle::new(from_point, to_point));
+        }
+        if let Some(to_point) = points.iter().find(|p| p.x == from_point.x) {
+            edges.insert(Rectangle::new(from_point, to_point));
         }
     }
     edges
 }
 
 fn solve_part_2(points: &Vec<Point>) {
-    println!("Building grid...");
-    let grid = Grid::new(points);
-    println!("Building edges...");
-    let edges = build_edges(&grid, &points[0]);
-    println!("Part 2: {}", edges.len());
+    let mut largest_area = 0;
+    let edges = build_edges(points);
+    for (i, from_point) in points.iter().enumerate() {
+        for to_point in points.iter().skip(i + 1) {
+            let rect = Rectangle::new(from_point, to_point);
+            if edges.iter().any(|edge| edge.overlaps(&rect)) {
+                continue;
+            }
+            let area = from_point.area(to_point);
+            if area < largest_area {
+                continue;
+            }
+            largest_area = area;
+        }
+    }
+    println!("Part 2: {}", largest_area);
 }
 
 pub fn solve_puzzle(input: &str) {
