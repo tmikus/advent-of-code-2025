@@ -6,6 +6,7 @@ mod puzzle_5;
 mod puzzle_6;
 mod puzzle_7;
 mod puzzle_8;
+mod puzzle_9;
 mod utils;
 
 fn read_number() -> i32 {
@@ -28,6 +29,7 @@ fn main() {
         (puzzle_6::solve_puzzle, "inputs/puzzle_6.txt"),
         (puzzle_7::solve_puzzle, "inputs/puzzle_7.txt"),
         (puzzle_8::solve_puzzle, "inputs/puzzle_8.txt"),
+        (puzzle_9::solve_puzzle, "inputs/puzzle_9.txt"),
     ];
     println!("Which puzzle would you like to run? [1-{}]", puzzles.len());
     let puzzle_number = read_number();
