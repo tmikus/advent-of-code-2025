@@ -1,3 +1,4 @@
+use good_lp::{constraint, default_solver, variable, Expression, Solution, SolverModel};
 use std::collections::VecDeque;
 
 #[derive(Debug)]
@@ -47,13 +48,13 @@ impl Input {
     }
 }
 
-struct State<'t> {
+struct LightState<'t> {
     desired_lights: &'t Vec<bool>,
     lights: Vec<bool>,
     press_count: usize,
 }
 
-impl<'t> State<'t> {
+impl<'t> LightState<'t> {
     fn new(desired_lights: &'t Vec<bool>) -> Self {
         Self {
             desired_lights,
@@ -75,7 +76,7 @@ impl<'t> State<'t> {
     }
 
     fn press_button(&self, button: &Vec<usize>) -> Self {
-        State {
+        LightState {
             desired_lights: self.desired_lights,
             lights: self.toggle_lights(button),
             press_count: self.press_count + 1,
@@ -83,14 +84,13 @@ impl<'t> State<'t> {
     }
 }
 
-fn get_min_button_press_count(input: &Input) -> usize {
-    let mut next_states = VecDeque::from([State::new(&input.desired_lights)]);
+fn get_min_button_press_count_for_lights(input: &Input) -> usize {
+    let mut next_states = VecDeque::from([LightState::new(&input.desired_lights)]);
     loop {
         let state = next_states.pop_front().unwrap();
         for button in &input.buttons {
             let next_state = state.press_button(button);
             if next_state.is_done() {
-                println!("Press count: {}", next_state.press_count);
                 return next_state.press_count;
             }
             next_states.push_back(next_state);
@@ -98,17 +98,52 @@ fn get_min_button_press_count(input: &Input) -> usize {
     }
 }
 
+fn solve_part_1(inputs: &Vec<Input>) {
+    let mut result = 0;
+    for input in inputs {
+        result += get_min_button_press_count_for_lights(&input);
+    }
+    println!("Part 1: {}", result);
+}
+
+fn get_min_button_press_count_for_joltage(input: &Input) -> usize {
+    let mut problem_vars = vec![];
+    let mut problem = good_lp::ProblemVariables::new();
+    for _ in 0..input.buttons.len() {
+        problem_vars.push(problem.add(variable().integer().min(0)));
+    }
+    let objective: Expression = problem_vars.iter().sum();
+    let mut model = problem.minimise(&objective).using(default_solver);
+    for (counter_idx, &target_val) in input.joltage.iter().enumerate() {
+        let mut expr = Expression::from(0);
+        for (btn_idx, affected_indices) in input.buttons.iter().enumerate() {
+            if affected_indices.contains(&counter_idx) {
+                expr += problem_vars[btn_idx];
+            }
+        }
+        model.add_constraint(constraint!(expr == (target_val as i32)));
+    }
+    match model.solve() {
+        Ok(solution) => solution.eval(&objective) as usize,
+        Err(_) => {
+            panic!("Failed to solve model");
+        }
+    }
+}
+
+fn solve_part_2(inputs: &Vec<Input>) {
+    let mut result = 0;
+    for input in inputs {
+        result += get_min_button_press_count_for_joltage(&input);
+    }
+    println!("Part 2: {}", result);
+}
+
 pub fn solve_puzzle(input: &str) {
     let inputs = input
         .lines()
         .map(|l| Input::parse(l.trim()))
         .collect::<Vec<_>>();
-    for input in &inputs {
-        println!("{:?}", input);
-    }
-    let mut result = 0;
-    for input in inputs {
-        result += get_min_button_press_count(&input);
-    }
-    println!("Result: {}", result);
+    solve_part_1(&inputs);
+    solve_part_2(&inputs);
 }
