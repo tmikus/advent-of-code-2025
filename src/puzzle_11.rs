@@ -21,7 +21,7 @@ impl<'t> Path<'t> {
     }
 }
 
-fn parse_connections(input: &str) -> HashMap<&str, Vec<Path>> {
+fn parse_connections(input: &'_ str) -> HashMap<&'_ str, Vec<Path<'_>>> {
     let mut connections = HashMap::new();
     for line in input.lines() {
         let parts: Vec<&str> = line.split(": ").collect();

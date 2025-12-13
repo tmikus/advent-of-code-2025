@@ -1,6 +1,7 @@
 mod puzzle_1;
 mod puzzle_10;
 mod puzzle_11;
+mod puzzle_12;
 mod puzzle_2;
 mod puzzle_3;
 mod puzzle_4;
@@ -34,6 +35,7 @@ fn main() {
         (puzzle_9::solve_puzzle, "inputs/puzzle_9.txt"),
         (puzzle_10::solve_puzzle, "inputs/puzzle_10.txt"),
         (puzzle_11::solve_puzzle, "inputs/puzzle_11.txt"),
+        (puzzle_12::solve_puzzle, "inputs/puzzle_12.txt"),
     ];
     println!("Which puzzle would you like to run? [1-{}]", puzzles.len());
     let puzzle_number = read_number();

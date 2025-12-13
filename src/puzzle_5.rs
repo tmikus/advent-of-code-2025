@@ -17,13 +17,9 @@ impl Range {
         self.to - self.from + 1
     }
 
-    fn is_valid(&self) -> bool {
-        self.len() >= 1
-    }
-
     fn trim_range_to_not_overlap(self, other: &Self) -> Vec<Self> {
         if self.from < other.from && self.to < other.from {
-           return vec![self];
+            return vec![self];
         }
         if self.from > other.to && self.to > other.to {
             return vec![self];
@@ -42,7 +38,10 @@ impl Range {
 fn get_input_blocks(input: &str) -> (Vec<&str>, Vec<&str>) {
     let lines = input.lines().collect::<Vec<&str>>();
     let split_position = lines.iter().position(|l| l.trim() == "").unwrap();
-    (lines[..split_position].to_vec(), lines[split_position + 1..].to_vec())
+    (
+        lines[..split_position].to_vec(),
+        lines[split_position + 1..].to_vec(),
+    )
 }
 
 fn get_number_pairs(input: Vec<&str>) -> Vec<Range> {
@@ -57,7 +56,10 @@ fn get_number_pairs(input: Vec<&str>) -> Vec<Range> {
 }
 
 fn get_numbers(input: Vec<&str>) -> Vec<i64> {
-    input.iter().map(|id_pair| id_pair.parse::<i64>().unwrap()).collect()
+    input
+        .iter()
+        .map(|id_pair| id_pair.parse::<i64>().unwrap())
+        .collect()
 }
 
 fn is_in_any_range(item: i64, ranges: &[Range]) -> bool {
@@ -90,7 +92,9 @@ pub fn solve_puzzle(input: &str) {
         trimmed_ranges.extend(intermediate_ranges);
     }
 
-    let total_len = trimmed_ranges.iter().fold(0, |acc, range| acc + range.len());
+    let total_len = trimmed_ranges
+        .iter()
+        .fold(0, |acc, range| acc + range.len());
     println!("Part 2: {}", total_len);
 }
 
